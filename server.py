@@ -1,14 +1,16 @@
 import os
 import sys
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Response, Request, UploadFile, File
+from fastapi.responses import FileResponse
 
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
 from config.secretmanager import load_data_into_env
+from services.showcaseGenius import generateIndex, revaluateIndex, generateDoc
+from services.visulearn import is_image, ocr, summarise_text, text_to_speech, get_length_of_audio, generate_images, final_video_production, get_title_from_text
 import asyncio
-
 
 base_dir = Path(__file__).resolve().parent
 sys.path.append(str(base_dir))
@@ -24,6 +26,84 @@ logger = get_logger()
 def hello():
     return 'world'
 
+# Showcase Genius routes
+@app.get("/generateIndex")
+async def generateIndex(q: str, slide_no: int):
+    logger.debug("[GET] API Request on /generateIndexGenerating index for slide " + str(slide_no) + " with query " + q)
+    if slide_no <= 0:
+        raise HTTPException(status_code=400, detail="Slide number needs to be larger than 1.")
+    elif slide_no > 8:
+        raise HTTPException(status_code=400, detail="Slide number needs to be less than or equal to 8.")
+    
+    try:
+        generatedIndex = generateIndex(q, slide_no)
+        return Response(content={"index": generatedIndex, "query": q}, status_code=200)
+    except Exception as e:
+        logger.error("Error generating index: " + str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating index: {str(e)}")
+    
+@app.post("/revaluateIndex")
+async def revaluateIndex(request: Request):
+    logger.debug("[POST] API Request on /revaluateIndex for revaluating index")
+    
+    body = await request.json()
+    q = body.get("query")
+    slide_no = body.get("slide_no")
+    index = body.get("index")
+
+    if slide_no <= 0:
+        raise HTTPException(status_code=400, detail="Slide number needs to be larger than 1.")
+    elif slide_no > 8:
+        raise HTTPException(status_code=400, detail="Slide number needs to be less than or equal to 8.")
+    
+    try:
+        revaluatedIndex = revaluateIndex(q, slide_no, index)
+        return Response(content={"index": revaluatedIndex, "query": q}, status_code=200)
+    except Exception as e:
+        logger.error("Error revaluating index: " + str(e))
+        raise HTTPException(status_code=500, detail=f"Error revaluating index: {str(e)}")
+    
+@app.post("/generateDoc")
+async def generateDoc(request: Request):
+    body = await request.json()
+    q = body.get("query")
+    logger.debug(f"[POST] API Request on /generateDoc for generating document for query: {q}")
+
+    slide_no = body.get("slide_no")
+    index = body.get("index")
+    
+    try:
+        generatedDoc = generateDoc(slide_no, index)
+        return Response(content={"doc": generatedDoc}, status_code=200)
+    except Exception as e:
+        logger.error("Error generating document: " + str(e))
+        raise HTTPException(status_code=500, detail=f"Error generating document: {str(e)}")
+    
+
+# Visulearn Routes
+@app.post("/gen-vid-from-image")
+async def create_upload_file(file: UploadFile = File(...)):
+    if not is_image(file):
+        raise HTTPException(status_code=400, detail="File is not a valid image")
+
+    text = ocr(file.file)
+    logger.debug(f"Text extracted: {text}")
+    # title = get_title_from_text(text)
+    title = "nigga"
+    summarised_text = summarise_text(text)
+    logger.debug(f"Summarised text: {summarised_text}")
+    audio_path = text_to_speech(summarised_text)
+
+    # figuring out the number of images to produce based on the audio generated
+    audio_duration = get_length_of_audio(audio_path)
+    num_images = int(audio_duration / 10) + 1
+    # image_paths: list[str] = generate_images(text, num_images)
+    image_paths = ["images/1.png", "images/2.png", "images/3.png", "images/4.png", "images/5.png", "images/6.png"]
+
+    video_path = final_video_production(image_paths, audio_path)
+
+    return FileResponse(video_path, filename=title+".mp4")
+
 async def main():
     await load_data_into_env()
     config = Config()
@@ -36,6 +116,6 @@ async def main():
 if __name__ == '__main__':
 
     logger.info("Starting server...")
-    logger.info("CURRENT ENVIRONMENT: " + os.environ.get('RUNTIME_ENV'))
+    logger.info("CURRENT ENVIRONMENT: " + os.environ.get('RUNTIME_ENV', "Development"))
     
     asyncio.run(main())
