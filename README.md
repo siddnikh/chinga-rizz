@@ -19,4 +19,5 @@ Collections:
 python3 -m venv chingarizz
 source chingarizz/bin/activate
 pip install -r requirements.txt
+chaingarizz/bin/python3 server.py
 ```

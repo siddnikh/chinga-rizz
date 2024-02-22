@@ -7,9 +7,8 @@ from fastapi.responses import FileResponse
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
-from config.secretmanager import load_data_into_env
 from services.showcaseGenius import generateIndex, revaluateIndex, generateDoc
-from services.visulearn import is_image, ocr, summarise_text, text_to_speech, get_length_of_audio, generate_images, final_video_production, get_title_from_text
+
 import asyncio
 
 base_dir = Path(__file__).resolve().parent
@@ -81,40 +80,41 @@ async def generateDoc(request: Request):
     
 
 # Visulearn Routes
+from services.visulearn import is_image, ocr, summarise_text, text_to_speech, get_length_of_audio, generate_images, final_video_production, get_title_from_text
+
 @app.post("/gen-vid-from-image")
 async def create_upload_file(file: UploadFile = File(...)):
+    logger.debug("[POST] API Request on /gen-vid-from-image")
     if not is_image(file):
         raise HTTPException(status_code=400, detail="File is not a valid image")
 
     text = ocr(file.file)
-    logger.debug(f"Text extracted: {text}")
-    # title = get_title_from_text(text)
+    title = get_title_from_text(text)
     title = "nigga"
     summarised_text = summarise_text(text)
-    logger.debug(f"Summarised text: {summarised_text}")
     audio_path = text_to_speech(summarised_text)
 
     # figuring out the number of images to produce based on the audio generated
     audio_duration = get_length_of_audio(audio_path)
     num_images = int(audio_duration / 10) + 1
-    # image_paths: list[str] = generate_images(text, num_images)
-    image_paths = ["images/1.png", "images/2.png", "images/3.png", "images/4.png", "images/5.png", "images/6.png"]
+    image_paths: list[str] = generate_images(text, num_images)
 
+    logger.debug("Starting video production 🚀")
     video_path = final_video_production(image_paths, audio_path)
 
+    if not video_path:
+        raise HTTPException(status_code=500, detail="Error while creating video :(")
     return FileResponse(video_path, filename=title+".mp4")
 
 async def main():
-    await load_data_into_env()
     config = Config()
-    port = os.getenv("HTTP_PORT", "5001")
+    port = "5001"
     config.bind = [f"0.0.0.0:{port}"]
     logger.info("HTTP Server running on port " + os.environ.get('HTTP_PORT', "5001"));
     await serve(app, config)
 
 
 if __name__ == '__main__':
-
     logger.info("Starting server...")
     logger.info("CURRENT ENVIRONMENT: " + os.environ.get('RUNTIME_ENV', "Development"))
     

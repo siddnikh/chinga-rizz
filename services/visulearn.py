@@ -5,9 +5,9 @@ from gtts import gTTS
 import secrets
 import string
 from pydub import AudioSegment
-from moviepy.editor import *
+from moviepy.editor import AudioFileClip, ImageSequenceClip, ImageClip, concatenate_videoclips
 import cv2
-from gensim.summarization import summarize
+# from gensim.summarization import summarize
 from services.logger import get_logger
 
 logger = get_logger()
@@ -26,8 +26,9 @@ def ocr(file):
     return text
 
 def summarise_text(text: str, ratio=0.2):
-    summary = summarize(text, ratio=ratio)
-    return summary
+    # summary = summarize(text, ratio=ratio)
+    # return summary
+    return text
 
 #TODO
 # rn, only for english
@@ -55,20 +56,23 @@ def final_video_production(image_paths: list[str], audio_path: str):
     random_name = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(6))
     output_filename = random_name + ".mp4"
 
-    codec = cv2.VideoWriter_fourcc(*'mp4v')
-    fps = 30
+    fps = 24
 
     audio = AudioFileClip(audio_path)
     try:
-        images_clip = ImageSequenceClip(image_paths, fps=fps, durations=[duration_per_image] * len(image_paths))
+        clips = [ImageClip(m).set_duration(duration_per_image) for m in image_paths]
+        concat_clip = concatenate_videoclips(clips, method="compose")
+        # images_clip = ImageSequenceClip(image_paths, fps=fps, durations=[duration_per_image] * len(image_paths))
     except Exception as e:
         logger.error("Error creating image sequence clip: " + str(e))
         return None
     
-    final_clip = images_clip.set_audio(audio)
-    
+    concat_clip = concat_clip.set_audio(audio)
+
     try:
-        final_clip.write_videofile(output_filename, codec=codec)
+        concat_clip.write_videofile(output_filename, fps=fps, codec='libx264')
+        return output_filename
     except Exception as e:
-        logger.error("Error writing video file: " + str(e))
-    return None
+        logger.error("Error writing video file: ")
+        print(e)
+        return None
