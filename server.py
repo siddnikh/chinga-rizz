@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from hypercorn.config import Config
 from hypercorn.asyncio import serve
 
-from services.showcaseGenius import generateIndex, revaluateIndex, generateDoc
+from services.showcaseGenius import generateIndex, generateDoc, generateDocContent
 
 import asyncio
 
@@ -41,27 +41,6 @@ async def generateIndex(q: str, slide_no: int):
         logger.error("Error generating index: " + str(e))
         raise HTTPException(status_code=500, detail=f"Error generating index: {str(e)}")
     
-@app.post("/revaluateIndex")
-async def revaluateIndex(request: Request):
-    logger.debug("[POST] API Request on /revaluateIndex for revaluating index")
-    
-    body = await request.json()
-    q = body.get("query")
-    slide_no = body.get("slide_no")
-    index = body.get("index")
-
-    if slide_no <= 0:
-        raise HTTPException(status_code=400, detail="Slide number needs to be larger than 1.")
-    elif slide_no > 8:
-        raise HTTPException(status_code=400, detail="Slide number needs to be less than or equal to 8.")
-    
-    try:
-        revaluatedIndex = revaluateIndex(q, slide_no, index)
-        return Response(content={"index": revaluatedIndex, "query": q}, status_code=200)
-    except Exception as e:
-        logger.error("Error revaluating index: " + str(e))
-        raise HTTPException(status_code=500, detail=f"Error revaluating index: {str(e)}")
-    
 @app.post("/generateDoc")
 async def generateDoc(request: Request):
     body = await request.json()
@@ -72,7 +51,8 @@ async def generateDoc(request: Request):
     index = body.get("index")
     
     try:
-        generatedDoc = generateDoc(slide_no, index)
+        doc_content = generateDocContent(slide_no, index)
+        generated_doc = generateDoc(index, doc_content)
         return Response(content={"doc": generatedDoc}, status_code=200)
     except Exception as e:
         logger.error("Error generating document: " + str(e))
