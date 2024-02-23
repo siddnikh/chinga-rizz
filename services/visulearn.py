@@ -1,13 +1,10 @@
-# Random ass functions that belong in no specific place
 from PIL import Image
 import pytesseract
 from gtts import gTTS
 import secrets
 import string
 from pydub import AudioSegment
-from moviepy.editor import AudioFileClip, ImageSequenceClip, ImageClip, concatenate_videoclips
-import cv2
-# from gensim.summarization import summarize
+from moviepy.editor import AudioFileClip, ImageClip, concatenate_videoclips
 from services.logger import get_logger
 
 logger = get_logger()

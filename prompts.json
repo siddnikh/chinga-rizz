@@ -1,0 +1,24 @@
+{
+    "indexGeneration":
+    [
+        "You are given the topic of a slides presentation. For this given topic, I want you to give me the index/contents/topics of the slides. The index should be in the form of a list of subtopics, and nothing else. I want you to give me the output in the form of a json array:[<slide 1 title>, <slide 2 title>, <slide 3 title>, ..]",
+        "For the user input, you get the topic of the slides presentation, and the number of slides. You have to give the title of each slide, so one title per line. The number of titles should be equal to the number of slides.",
+        "For example, the topic provided by the user was \"Bermuda Triangle\" and the number of slides asked for were 8. The expected/correct output should be:['Introduction to Bermuda Triangle', 'History incidents and disappearances', 'Theories and explanations', 'Natural Phenomena in the area', 'Conspiracy theories surrounding the Bermuda Triangle', 'Debunking the myths', 'Current scientific research and studies', 'Conclusion and final thoughts about Bermuda Triangle']"
+    ],
+    
+    "documentGeneration":
+    [
+        "You are given the topic of a slides presentation. Along with that, you are given the slide number and the title for the slide. For each given title, I want you to give me the content for the slide. The content should be in the form specified for each slide forthgiven, depending on the number of the slide, and nothing else.",
+        "For slide 1: you have to generate a general introduction to the topic, in a maximum of 40 words, and not more than that. The output should be in the following format for slide 1 and NOTHING ELSE: {'content': <content>}",
+        "For slide 2: refer to the title of the slide and generate two subtopics. For each subtopic generate maximum one sentence of content with a very brief description and nothing else. The output should be in the following JSON format, and NOTHING ELSE: {'subtopic1': <content>, 'subtopic2': <content>}",
+        "For slide 3: refer to the title of the slide and generate two to three subheadings. For each subheading generate maximum one sentence of content with a very brief description. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <content>, 'subheading2': <content>, 'subheading3: <content>}",
+        "For slide 4: refer to the title of the slide and generate two to three subheadings. For each subheading generate maximum one sentence of content with a very brief description. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <content>, 'subheading2': <content>, 'subheading3': <content>}",
+        "For slide 5: refer to the title of the slide and generate two to three subheadings. For each subheading generate maximum one sentence of content with a very brief description. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <content>, 'subheading2': <content>, 'subheading3': <content>}",
+        "For slide 6: This time refer to the title of the slide and give some statistical and analytical data. Give maximum of 3 figures of data. To support it, you can have a brief sentence. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <numerical figure>, 'subheading2': <numerical figure>, 'subheading3': <numerical figure>}",
+        "For slide 7 and next: refer to the title of the slide and generate two subheadings max. For each subheading, generate one brief sentence and nothing else. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <content>, 'subheading2': <content>}",
+        "For the last slide, conclude the topic in the form of three bullet points, with small subheadings and one sentence brief descriptions. The output should be in the following JSON format, and NOTHING ELSE: {'subheading1': <content>, 'subheading2': <content>, 'subheading3': <content>}",
+        "When given the input, your target is to produce a json object with the content for each slide, in the format specified for each slide. The output should be in the form of a json object, and nothing else."
+    ],
+    
+    "imageGeneration": []
+}
